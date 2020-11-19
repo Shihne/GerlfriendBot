@@ -33,7 +33,7 @@ module.exports = async (group, {from_id, text, payload, peer_id, conversation_me
                 } else if (e === 2) {
                     await send(group, peer_id, 'Пожалуйста, не делай так больше');
                 } else if (e === 3) {
-                    await send(group, peer_id, 'Прекрати');
+                    await send(group, peer_id, 'Завязывай');
                 } else if (e === 4) {
                     await send(group, peer_id, 'Да зачем здесь вообще эта тупая кнопка?');
                     e = 0;
@@ -41,12 +41,13 @@ module.exports = async (group, {from_id, text, payload, peer_id, conversation_me
                 e++;
                 break;
             }
-            if (g === 3 || text.indexOf('Команды') !== -1 || text.indexOf('команды') !== -1) {
-                await send(group, peer_id, `Пока только могу рассчитать какую-либо вероятность или установить таймер. \nДля первого в сообщении должно быть слово вероятность. \nДля второго - слово таймер и число минут`);
+            if (g === 3 || text.indexOf('Список команд') !== -1 || text.indexOf('список команд') !== -1) {
+                await send(group, peer_id, `Пока только могу рассчитать какую-либо вероятность или установить таймер. \nДля первого в сообщении должно быть слово вероятность. \nДля второго - слово таймер и число минут. 
+На остальные вопросы отвечаю да или нет.`);
                 break;
             }
             if (text === 'Начать') {
-                await send(group, peer_id, "Добрый вечер! \nЕсли нужно ознакомиться со списком команд, но внизу нет кнопок, введи слово команды", keyboards.gf);
+                await send(group, peer_id, "Добрый вечер! \nЕсли нужно ознакомиться со списком команд, но внизу нет кнопок, введи 'список команд'", keyboards.gf);
                 break;
             }
 
@@ -95,7 +96,6 @@ module.exports = async (group, {from_id, text, payload, peer_id, conversation_me
                 break;
             }
 
-            await send(group, peer_id, '', keyboards.gf);
             break;
         /*
         case 'tb' :
