@@ -19,9 +19,9 @@ module.exports = {
 
     Gerlfriend: {
         name: 'gerlfriend',
-        id: process.env.Gerlfriend_id,
-        confirmation: process.env.Gerlfriend_confirmation,
-        token: process.env.Gerlfriend_token,
+        id: /*process.env.Gerlfriend_id*/200353752,
+        confirmation: /*process.env.Gerlfriend_confirmation*/"716dc9ff",
+        token: /*process.env.Gerlfriend_token*/"75307a5e1cb7200faf8e46cf7fd66186f6fc64fc3643242fed448aa83277100d9e0719756d53eb8a0d3db",
         v: '5.126',
         works: true
     }

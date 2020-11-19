@@ -15,6 +15,5 @@ server.post('/', Bot.listen);
 server.listen(PORT, () => {
     Bot.setOnline();
     console.log(`Сервер работает...`);
-    console.log(process.env.PORT);
 });
 
