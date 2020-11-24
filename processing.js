@@ -1,7 +1,7 @@
 'use strict';
 
 const send = require('./sending');
-const gett = require('./getting');
+//const gett = require('./getting');
 
 const keyboards = require('./keyboards');
 let e = 1;
@@ -11,13 +11,13 @@ module.exports = async (group, {from_id, text, payload, peer_id, conversation_me
         case 'gerlfriend' :
             let g;
             if (JSON.stringify(peer_id).startsWith('2')) {
-                const o1 = await gett('messages.getByConversationMessageId', {
+                /*const o1 = await gett('messages.getByConversationMessageId', {
                     peer_id: peer_id,
                     conversation_message_ids: conversation_message_id,
                     access_token: group.token,
                     v: group.v
                 });
-                console.log(o1);
+                console.log(o1);*/
             } else {
                 peer_id = from_id;
                 try {
