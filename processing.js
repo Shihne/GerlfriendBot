@@ -97,7 +97,7 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
 
 
     switch (group.NAME) {
-        case 'gerlfiend' :
+        case 'gerlfriend' :
             let g;
             let isConf = false;
             let isCalling;
