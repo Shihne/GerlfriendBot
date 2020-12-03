@@ -66,7 +66,7 @@ module.exports = {
     IS_PRODUCTION: process.env.NODE_ENV === 'production',
     TB: {
         NAME: 'tb',
-        ID: process.env.TB_ID,
+        ID: +process.env.TB_ID,
         CONFIRMATION: process.env.TB_CONFIRMATION,
         TOKEN: process.env.TB_TOKEN,
         V: '5.126',
@@ -75,7 +75,7 @@ module.exports = {
 
     WRY: {
         NAME: 'wry',
-        ID: process.env.WRY_ID,
+        ID: +process.env.WRY_ID,
         CONFIRMATION: process.env.WRY_CONFIRMATION,
         TOKEN: process.env.WRY_TOKEN,
         V: '5.126',
@@ -84,7 +84,7 @@ module.exports = {
 
     GERLFRIEND: {
         NAME: 'gerlfriend',
-        ID: process.env.GERLFRIEND_ID,
+        ID: +process.env.GERLFRIEND_ID,
         CONFIRMATION: process.env.GERLFRIEND_CONFIRMATION,
         TOKEN: process.env.GERLFRIEND_TOKEN,
         V: '5.126',

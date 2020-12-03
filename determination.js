@@ -4,11 +4,11 @@ const {GERLFRIEND, WRY, TB} = require('./configuration');
 class Determination {
     static determGroup(id){
         switch (id) {
-            case +WRY.ID :
+            case WRY.ID :
                 return WRY;
-            case +TB.ID :
+            case TB.ID :
                 return TB;
-            case +GERLFRIEND.ID :
+            case GERLFRIEND.ID :
                 return GERLFRIEND;
             default :
                 return {};
