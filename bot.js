@@ -33,6 +33,7 @@ class Bot {
     static listen(...args) {
         const body = args[0].body;
         const group = Determination.determGroup(body.group_id);
+        console.log(group);
 
         switch (body.type) {
             case 'confirmation' :
