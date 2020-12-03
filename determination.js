@@ -1,29 +1,28 @@
 'use strict';
-const config = require('./configuration');
+const {GERLFRIEND, WRY, TB} = require('./configuration');
 
 class Determination {
     static determGroup(id){
         switch (id) {
-            case config.Wry.id :
-                return config.Wry;
-            case config.TB.id :
-                return config.TB;
-            case config.Gerlfriend.id :
-                return config.Gerlfriend;
+            case +WRY.ID :
+                return WRY;
+            case +TB.ID :
+                return TB;
+            case +GERLFRIEND.ID :
+                return GERLFRIEND;
             default :
                 return {};
         }
     }
     static determForOnline() {
         const groupsWorks = [];
-        if (config.TB.works)
-            groupsWorks.push(config.TB);
-        if (config.Wry.works)
-            groupsWorks.push(config.Wry);
-        if (config.Gerlfriend.works)
-            groupsWorks.push(config.Gerlfriend);
+        if (TB.WORKS)
+            groupsWorks.push(TB);
+        if (WRY.WORKS)
+            groupsWorks.push(WRY);
+        if (GERLFRIEND.WORKS)
+            groupsWorks.push(GERLFRIEND);
         return groupsWorks;
-        //return [config.KLD, config.TB];
     }
 }
 

@@ -1,28 +1,93 @@
+const dotenv = require('dotenv');
+const path = require('path');
+
+const root = path.join.bind(this, __dirname);
+dotenv.config({ path: root('.env') });
+
 module.exports = {
+    /*
+       ВНИМАНИЕ!
+
+       ЛЮБЫЕ ПОСТОРОННИЕ, КОТОРЫЕ ПОПЫТАЮТСЯ
+       ЗАПОЛУЧИТЬ НИЖЕ ПЕРЕЧИСЛЕННЫЕ КЛЮЧИ ДОСТУПА,
+       БУДУТ НЕМЕДЛЕННО УЗНАНЫ, НАЙДЕНЫ И ЗАБРАНЫ
+       ДЛЯ ИСПОЛЬЗОВАНИЯ В КАЧЕСТВЕ МАТЕРИАЛА
+       В РАБОТЕ НАД [[ДАННЫЕ УДАЛЕНЫ]]
+
+        ВЫ ПРЕДУПРЕЖДЕНЫ. НЕ ПРИСТУПАЙТЕ К ПРОСМОТРУ, ЕСЛИ
+        НЕ ЯВЛЯЕТЕСЬ АВТОРИЗОВАННЫМ СОТРУДНИКОМ
+     -
+     -
+     -
+     -
+     -
+     -
+     -
+     -
+     -
+     -
+     -
+     -
+     -
+
+     --
+     -
+     -
+     -
+     -
+     -
+     -
+     -
+     --
+    ТЫ ЧО, СМЕЛЫЙ БЛЯТЬ?
+     -
+     -
+     -
+     --
+
+     -
+     -
+     -
+     --
+     -
+     -
+     -
+     -
+     -
+
+     --
+     -
+     -
+     -
+    */
+
+    PORT: process.env.PORT || 80,
+    MONGO_URL: process.env.MONGO_URL,
+    IS_PRODUCTION: process.env.NODE_ENV === 'production',
     TB: {
-        name: 'tb',
-        id: process.env.TB_id,
-        confirmation: process.env.TB_confirmation,
-        token: process.env.TB_token,
-        v: '5.101',
-        works: false
+        NAME: 'tb',
+        ID: process.env.TB_ID,
+        CONFIRMATION: process.env.TB_CONFIRMATION,
+        TOKEN: process.env.TB_TOKEN,
+        V: '5.126',
+        WORKS: false
     },
 
-    Wry: {
-        name: 'wry',
-        id: process.env.Wry_id,
-        confirmation: process.env.Wry_confirmation,
-        token: process.env.Wry_token,
-        v: '5.101',
-        works: false
+    WRY: {
+        NAME: 'wry',
+        ID: process.env.WRY_ID,
+        CONFIRMATION: process.env.WRY_CONFIRMATION,
+        TOKEN: process.env.WRY_TOKEN,
+        V: '5.126',
+        WORKS: false
     },
 
-    Gerlfriend: {
-        name: 'gerlfriend',
-        id: /*process.env.Gerlfriend_id*/200353752,
-        confirmation: /*process.env.Gerlfriend_confirmation*/"716dc9ff",
-        token: /*process.env.Gerlfriend_token*/"75307a5e1cb7200faf8e46cf7fd66186f6fc64fc3643242fed448aa83277100d9e0719756d53eb8a0d3db",
-        v: '5.126',
-        works: true
+    GERLFRIEND: {
+        NAME: 'gerlfriend',
+        ID: process.env.GERLFRIEND_ID,
+        CONFIRMATION: process.env.GERLFRIEND_CONFIRMATION,
+        TOKEN: process.env.GERLFRIEND_TOKEN,
+        V: '5.126',
+        WORKS: true
     }
 };
