@@ -171,10 +171,10 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
             }
 
             if (isConf && isCalling && (text.indexOf('кто ') !== -1 || text.indexOf('Кто ') !== -1)) {
-                if (text.indexOf('сан') !== -1 || text.indexOf('Сан') !== -1 || text.indexOf('Саш') !== -1 || text.indexOf('саш') !== -1) {
+                /*if (text.indexOf('сан') !== -1 || text.indexOf('Сан') !== -1 || text.indexOf('Саш') !== -1 || text.indexOf('саш') !== -1) {
                     await send(group, peer_id, secretComs[Math.floor(Math.random() * secretComs.length)]);
                     break;
-                }
+                }*/
                 let choicen;
                 if (peer_id !== 2000000002) {
                     const mm = await gett('messages.getConversationMembers', {
@@ -223,10 +223,10 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
             if (canSend && (text.indexOf('вероятность') !== -1 || text.indexOf('Вероятность') !== -1) &&
                 text.indexOf('когда ') === -1 && text.indexOf('Когда ') === -1 &&
                 text.indexOf('кто ') === -1 && text.indexOf('Кто ') === -1) {
-                if (text.indexOf('сан') !== -1 || text.indexOf('Сан') !== -1 || text.indexOf('Саш') !== -1 || text.indexOf('саш') !== -1) {
+                /*if (text.indexOf('сан') !== -1 || text.indexOf('Сан') !== -1 || text.indexOf('Саш') !== -1 || text.indexOf('саш') !== -1) {
                     await send(group, peer_id, secretComs[Math.floor(Math.random() * secretComs.length)]);
                     break;
-                }
+                }*/
                 const rand = Math.floor(Math.random() * 100);
                 await send(group, peer_id, probComs[Math.floor(Math.random()*probComs.length)] + rand + '%.');
                 if (text.indexOf('пидор') !== -1) {
@@ -236,10 +236,10 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
             }
 
             if (canSend && (text.indexOf('когда ') !== -1 || text.indexOf('Когда ') !== -1)) {
-                if (text.indexOf('сан') !== -1 || text.indexOf('Сан') !== -1 || text.indexOf('Саш') !== -1 || text.indexOf('саш') !== -1) {
+                /*if (text.indexOf('сан') !== -1 || text.indexOf('Сан') !== -1 || text.indexOf('Саш') !== -1 || text.indexOf('саш') !== -1) {
                     await send(group, peer_id, secretComs[Math.floor(Math.random() * secretComs.length)]);
                     break;
-                }
+                }*/
                 switch (Math.floor(Math.random() * 8)) {
                     case 0 :
                         await send(group, peer_id, probComs[Math.floor(Math.random()*probComs.length)] + 'никогда.');
@@ -276,10 +276,10 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
 
             if (canSend && text.indexOf('?') !== -1 && text.indexOf('Вероятность') === -1 && text.indexOf('вероятность') === -1 &&
                 text.indexOf('когда ') === -1 && text.indexOf('Когда ') === -1) {
-                if (text.indexOf('сан') !== -1 || text.indexOf('Сан') !== -1 || text.indexOf('Саш') !== -1 || text.indexOf('саш') !== -1) {
+                /*if (text.indexOf('сан') !== -1 || text.indexOf('Сан') !== -1 || text.indexOf('Саш') !== -1 || text.indexOf('саш') !== -1) {
                     await send(group, peer_id, secretComs[Math.floor(Math.random() * secretComs.length)]);
                     break;
-                }
+                }*/
                 const rand = Math.floor(Math.random() * 2);
                 //await send(group, peer_id, rand);
                 if (rand === 0) {
