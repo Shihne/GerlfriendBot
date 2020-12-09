@@ -414,6 +414,14 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                         //conf.marriages.forEach(async marriage => { ПАШОЛ НАХУЙ ФОРИЧ, ТВАРЯ ЕБАННАЯ БЛЯТЬ НЕНАВИЖУ ТЕБЯ СУКААААА
                         for (const marriage of conf.marriages) {
                             const time = Math.floor((Date.now() - marriage.createdAt) / 86400000);
+                            let timeMes = ``;
+                            if (time % 10 === 1 && time % 100 !== 11) {
+                                timeMes = `${time} день`;
+                            } else if ((time % 10 === 2 && time % 100 !== 12) || (time % 10 === 3 && time % 100 !== 13) || (time % 10 === 4 && time % 100 !== 14)) {
+                                timeMes = `${time} дня`;
+                            } else {
+                                timeMes = `${time} дней`;
+                            }
                             const sp = await gett('users.get', {
                                 user_ids: [marriage.husband, marriage.wife],
                                 v: group.V,
@@ -426,7 +434,7 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                             } else {
                                 const husband = sp.response[0];
                                 const wife = sp.response[1];
-                                message += `${husband.first_name} ${husband.last_name} и ${wife.first_name} ${wife.last_name} - ${time} дней\n`;
+                                message += `${husband.first_name} ${husband.last_name} и ${wife.first_name} ${wife.last_name} - ${timeMes}\n`;
                             }
                         }
                     }
