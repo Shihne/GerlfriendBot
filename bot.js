@@ -23,6 +23,7 @@ class Bot {
 
         switch (body.type) {
             case 'confirmation' :
+                console.log(body);
                 args[1].end(group.CONFIRMATION);
                 break;
             case 'message_new' :
