@@ -23,12 +23,13 @@ const yearComs = ['в следующем месяце.', 'через 2 меся�
 const decadesComs = ['в следующем году.', 'через 2 года.', 'через 3 года.', 'через 4 года.', 'через 5 лет.', 'через 6 лет.', 'через 7 лет.', 'через 8 лет.', 'через 9 лет.', 'через 10 лет.'];
 const secretComs = ['[[Доступ запрещён]]', '{{Данные удалены}}', 'Секретные сведения', 'Конфиденциальная информация'];
 
-module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_messages, reply_message}) => {
+module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_messages, reply_message, conversation_message_id}) => {
     switch (group.NAME) {
         case 'gerlfriend' :
             let g;
             let isConf = false;
             let isCalling;
+            let reactions = [];
             if (peer_id > 2000000000) {
                 isConf = true;
                 isCalling = calls.some(call => {
@@ -42,9 +43,21 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                     }
                 });
                 console.log(isCalling, text);
+                const conf = await models.Conf.findOne({
+                    idVK: peer_id
+                }).populate('reactions');
+                if (conf) {
+                    reactions = conf.reactions;
+                }
             } else {
                 if (payload !== undefined)
                     g = JSON.parse(payload).button;
+                const user = await models.User.findOne({
+                    idVK: from_id
+                }).populate('reactions');
+                if (user) {
+                    reactions = user.reactions;
+                }
             }
 
             if (peer_id === 2000000002 && action !== undefined) {
@@ -73,7 +86,6 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
             if (!canSend)
                 break;
 
-
             if (g === '3' || /список.*команд/i.test(text)) {
                 await VK_API.messagesSend(group, peer_id, `
                     Доступные команды на текущий момент. 
@@ -97,6 +109,19 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                     18)Продолжение следует...
                     `);
                 break;
+            }
+
+            if (reactions.length !== 0) {
+                let isDone = false;
+                for (const reaction of reactions) {
+                    if (text.indexOf(reaction.stimulus) !== -1) {
+                        await VK_API.messagesSend(group, peer_id, reaction.answer);
+                        isDone = true;
+                        break;
+                    }
+                }
+                if (isDone)
+                    break;
             }
 
             const timer = time => new Promise(resolve => {
@@ -640,42 +665,6 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                 }
             }
 
-
-            try {
-                if (isConf) {
-                    const conf = await models.Conf.findOne({
-                        idVK: peer_id
-                    }).populate('reactions');
-                    if (!conf)
-                        break;
-                    else {
-                        for (const reaction of conf.reactions) {
-                            if (text.indexOf(reaction.stimulus) !== -1) {
-                                await VK_API.messagesSend(group, peer_id, reaction.answer);
-                                break;
-                            }
-                        }
-                        break;
-                    }
-                } else {
-                    const user = await models.User.findOne({
-                        idVK: from_id
-                    }).populate('reactions');
-                    if (!user)
-                        break;
-                    else {
-                        for (const reaction of user.reactions) {
-                            if (text.indexOf(reaction.stimulus) !== -1) {
-                                await VK_API.messagesSend(group, from_id, reaction.answer);
-                                break;
-                            }
-                        }
-                    }
-                }
-            } catch (e) {
-                console.log(e);
-            }
-
             if (!isConf && from_id === 153146966 && text === 's') {
                 await VK_API.messagesSend(group, from_id, "s", keyboards.gf);
                 break;
@@ -698,6 +687,11 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                 await VK_API.messagesSend(group, from_id, "Добрый вечер! \nЕсли нужно ознакомиться со списком команд, но внизу нет кнопок, введи 'список команд'.", keyboards.gf1);
                 break;
             }
+            if (!isConf) {
+                await VK_API.messagesMarkAsRead(group, conversation_message_id, from_id, 1);
+                break;
+            }
+
             break;
 
         /*case 'tb' :

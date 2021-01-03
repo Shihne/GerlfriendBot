@@ -71,6 +71,20 @@ class VK_API {
             console.log('Не удалось отправить сообщение');
         }
     }
+    static async messagesMarkAsRead({TOKEN, V, ID}, message_id, peer_id, mark_conversation_as_read) {
+        try {
+            await Request.postR('messages.markAsRead', {
+                message_ids: conversation_message_id,
+                peer_id: peer_id,
+                group_id: ID,
+                mark_conversation_as_read: mark_conversation_as_read,
+                v: V,
+                access_token: TOKEN
+            })
+        } catch (e) {
+            console.log('Не удалось отметить сообщение');
+        }
+    }
 }
 
 module.exports = VK_API;
