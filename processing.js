@@ -687,10 +687,10 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                 await VK_API.messagesSend(group, from_id, "Добрый вечер! \nЕсли нужно ознакомиться со списком команд, но внизу нет кнопок, введи 'список команд'.", keyboards.gf1);
                 break;
             }
-            if (!isConf) {
+            /*if (!isConf) {
                 await VK_API.messagesMarkAsRead(group, id, from_id, 1);
                 break;
-            }
+            }*/
 
             break;
 
