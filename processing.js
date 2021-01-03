@@ -23,7 +23,7 @@ const yearComs = ['в следующем месяце.', 'через 2 меся�
 const decadesComs = ['в следующем году.', 'через 2 года.', 'через 3 года.', 'через 4 года.', 'через 5 лет.', 'через 6 лет.', 'через 7 лет.', 'через 8 лет.', 'через 9 лет.', 'через 10 лет.'];
 const secretComs = ['[[Доступ запрещён]]', '{{Данные удалены}}', 'Секретные сведения', 'Конфиденциальная информация'];
 
-module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_messages, reply_message, conversation_message_id}) => {
+module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_messages, reply_message, id}) => {
     switch (group.NAME) {
         case 'gerlfriend' :
             let g;
@@ -688,7 +688,7 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                 break;
             }
             if (!isConf) {
-                await VK_API.messagesMarkAsRead(group, conversation_message_id, from_id, 1);
+                await VK_API.messagesMarkAsRead(group, id, from_id, 1);
                 break;
             }
 

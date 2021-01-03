@@ -74,7 +74,7 @@ class VK_API {
     static async messagesMarkAsRead({TOKEN, V, ID}, message_id, peer_id, mark_conversation_as_read) {
         try {
             await Request.postR('messages.markAsRead', {
-                message_ids: conversation_message_id,
+                message_ids: message_id,
                 peer_id: peer_id,
                 group_id: ID,
                 mark_conversation_as_read: mark_conversation_as_read,
