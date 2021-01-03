@@ -124,6 +124,158 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                     break;
             }
 
+            if (/добав.*реакци.*\[.*].*\[.*]/i.test(text)) {
+                const st = text.slice(text.match(/\[/).index + 1, text.match(/]/).index);
+                console.log(st);
+                text = text.slice(text.match(/]/).index + 1);
+                console.log(text);
+                const an = text.slice(text.match(/\[/).index + 1, text.match(/]/).index);
+                console.log(an);
+                try {
+                    if (isConf) {
+                        const conf = await models.Conf.findOne({
+                            idVK: peer_id
+                        }).populate('reactions');
+                        if (!conf) {
+                            const newConf = await models.Conf.create({
+                                idVK: peer_id
+                            });
+                            const reaction = await models.ReactionConf.create({
+                                conf: newConf._id,
+                                stimulus: st,
+                                answer: an
+                            });
+                            newConf.reactions = [reaction];
+                            await newConf.save();
+                            await VK_API.messagesSend(group, peer_id, 'Реакция создана.');
+                            break;
+                        } else {
+                            const reactions = conf.reactions;
+                            const isReacting = reactions.some(reaction => reaction.stimulus === st);
+                            if (!isReacting) {
+                                const newReaction = await models.ReactionConf.create({
+                                    conf: conf._id,
+                                    stimulus: st,
+                                    answer: an
+                                });
+                                conf.reactions.push(newReaction);
+                                await conf.save();
+                                await VK_API.messagesSend(group, peer_id, 'Реакция создана.');
+                                break;
+                            } else {
+                                await VK_API.messagesSend(group, peer_id, 'Реакция уже существует.');
+                                break;
+                            }
+                        }
+                    } else {
+                        const user = await models.User.findOne({
+                            idVK: from_id
+                        }).populate('reactions');
+                        if (!user) {
+                            const newUser = await models.User.create({
+                                idVK: from_id
+                            });
+                            const reaction = await models.ReactionPers.create({
+                                ownerID: newUser._id,
+                                stimulus: st,
+                                answer: an
+                            });
+                            newUser.reactions = [reaction];
+                            await newUser.save();
+                            await VK_API.messagesSend(group, from_id, 'Реакция создана.');
+                            break;
+                        } else {
+                            const reactions = user.reactions;
+                            const isReacting = reactions.some(reaction => reaction.stimulus === st);
+                            if (!isReacting) {
+                                const newReaction = await models.ReactionPers.create({
+                                    ownerID: user._id,
+                                    stimulus: st,
+                                    answer: an
+                                });
+                                user.reactions.push(newReaction);
+                                await user.save();
+                                await VK_API.messagesSend(group, from_id, 'Реакция создана.');
+                                break;
+                            } else {
+                                await VK_API.messagesSend(group, from_id, 'Реакция уже существует.');
+                                break;
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.log(e);
+                }
+                break;
+            }
+
+            if (/удали.*реакци.*\[.*]/i.test(text)) {
+                const st = text.slice(text.match(/\[/).index + 1, text.match(/]/).index);
+                console.log(st);
+                try {
+                    if (isConf) {
+                        const conf = await models.Conf.findOne({
+                            idVK: peer_id
+                        }).populate('reactions');
+                        if (!conf || conf.reactions.length === 0) {
+                            await VK_API.messagesSend(group, peer_id, `Здесь нет реакций.`);
+                            break;
+                        } else {
+                            const reactions = conf.reactions;
+                            let brokenReaction;
+                            for (const reaction of reactions) {
+                                if (reaction.stimulus === st) {
+                                    brokenReaction = reaction;
+                                    reactions.splice(reactions.indexOf(reaction), 1);
+                                    break;
+                                }
+                            }
+                            if (brokenReaction === undefined) {
+                                await VK_API.messagesSend(group, peer_id, 'Такой реакции нет.');
+                                break;
+                            } else {
+                                conf.reactions = reactions;
+                                await conf.save();
+                                await models.ReactionConf.findByIdAndDelete(brokenReaction._id);
+
+                                await VK_API.messagesSend(group, peer_id, `Реакция удалена.`);
+                                break;
+                            }
+                        }
+                    } else {
+                        const user = await models.User.findOne({
+                            idVK: from_id
+                        }).populate('reactions');
+                        if (!user || user.reactions.length === 0) {
+                            await VK_API.messagesSend(group, from_id, `У тебя нет реакций.`);
+                            break;
+                        } else {
+                            const reactions = user.reactions;
+                            let brokenReaction;
+                            for (const reaction of reactions) {
+                                if (reaction.stimulus === st) {
+                                    brokenReaction = reaction;
+                                    reactions.splice(reactions.indexOf(reaction), 1);
+                                    break;
+                                }
+                            }
+                            if (brokenReaction === undefined) {
+                                await VK_API.messagesSend(group, from_id, 'Такой реакции нет.');
+                                break;
+                            } else {
+                                user.reactions = reactions;
+                                await user.save();
+                                await models.ReactionPers.findByIdAndDelete(brokenReaction._id);
+                                await VK_API.messagesSend(group, from_id, `Реакция удалена.`);
+                                break;
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.log(e);
+                }
+            }
+
             const timer = time => new Promise(resolve => {
                 setTimeout(resolve, time);
             });
@@ -511,158 +663,6 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
 
                 await VK_API.messagesSend(group, peer_id, message);
                 break;
-            }
-
-            if (/добав.*реакци.*\[.*].*\[.*]/i.test(text)) {
-                const st = text.slice(text.match(/\[/).index + 1, text.match(/]/).index);
-                console.log(st);
-                text = text.slice(text.match(/]/).index + 1);
-                console.log(text);
-                const an = text.slice(text.match(/\[/).index + 1, text.match(/]/).index);
-                console.log(an);
-                try {
-                    if (isConf) {
-                        const conf = await models.Conf.findOne({
-                            idVK: peer_id
-                        }).populate('reactions');
-                        if (!conf) {
-                            const newConf = await models.Conf.create({
-                                idVK: peer_id
-                            });
-                            const reaction = await models.ReactionConf.create({
-                                conf: newConf._id,
-                                stimulus: st,
-                                answer: an
-                            });
-                            newConf.reactions = [reaction];
-                            await newConf.save();
-                            await VK_API.messagesSend(group, peer_id, 'Реакция создана.');
-                            break;
-                        } else {
-                            const reactions = conf.reactions;
-                            const isReacting = reactions.some(reaction => reaction.stimulus === st);
-                            if (!isReacting) {
-                                const newReaction = await models.ReactionConf.create({
-                                    conf: conf._id,
-                                    stimulus: st,
-                                    answer: an
-                                });
-                                conf.reactions.push(newReaction);
-                                await conf.save();
-                                await VK_API.messagesSend(group, peer_id, 'Реакция создана.');
-                                break;
-                            } else {
-                                await VK_API.messagesSend(group, peer_id, 'Реакция уже существует.');
-                                break;
-                            }
-                        }
-                    } else {
-                        const user = await models.User.findOne({
-                            idVK: from_id
-                        }).populate('reactions');
-                        if (!user) {
-                            const newUser = await models.User.create({
-                                idVK: from_id
-                            });
-                            const reaction = await models.ReactionPers.create({
-                                ownerID: newUser._id,
-                                stimulus: st,
-                                answer: an
-                            });
-                            newUser.reactions = [reaction];
-                            await newUser.save();
-                            await VK_API.messagesSend(group, from_id, 'Реакция создана.');
-                            break;
-                        } else {
-                            const reactions = user.reactions;
-                            const isReacting = reactions.some(reaction => reaction.stimulus === st);
-                            if (!isReacting) {
-                                const newReaction = await models.ReactionPers.create({
-                                    ownerID: user._id,
-                                    stimulus: st,
-                                    answer: an
-                                });
-                                user.reactions.push(newReaction);
-                                await user.save();
-                                await VK_API.messagesSend(group, from_id, 'Реакция создана.');
-                                break;
-                            } else {
-                                await VK_API.messagesSend(group, from_id, 'Реакция уже существует.');
-                                break;
-                            }
-                        }
-                    }
-                } catch (e) {
-                    console.log(e);
-                }
-                break;
-            }
-
-            if (/удали.*реакци.*\[.*]/i.test(text)) {
-                const st = text.slice(text.match(/\[/).index + 1, text.match(/]/).index);
-                console.log(st);
-                try {
-                    if (isConf) {
-                        const conf = await models.Conf.findOne({
-                            idVK: peer_id
-                        }).populate('reactions');
-                        if (!conf || conf.reactions.length === 0) {
-                            await VK_API.messagesSend(group, peer_id, `Здесь нет реакций.`);
-                            break;
-                        } else {
-                            const reactions = conf.reactions;
-                            let brokenReaction;
-                            for (const reaction of reactions) {
-                                if (reaction.stimulus === st) {
-                                    brokenReaction = reaction;
-                                    reactions.splice(reactions.indexOf(reaction), 1);
-                                    break;
-                                }
-                            }
-                            if (brokenReaction === undefined) {
-                                await VK_API.messagesSend(group, peer_id, 'Такой реакции нет.');
-                                break;
-                            } else {
-                                conf.reactions = reactions;
-                                await conf.save();
-                                await models.ReactionConf.findByIdAndDelete(brokenReaction._id);
-
-                                await VK_API.messagesSend(group, peer_id, `Реакция удалена.`);
-                                break;
-                            }
-                        }
-                    } else {
-                        const user = await models.User.findOne({
-                            idVK: from_id
-                        }).populate('reactions');
-                        if (!user || user.reactions.length === 0) {
-                            await VK_API.messagesSend(group, from_id, `У тебя нет реакций.`);
-                            break;
-                        } else {
-                            const reactions = user.reactions;
-                            let brokenReaction;
-                            for (const reaction of reactions) {
-                                if (reaction.stimulus === st) {
-                                    brokenReaction = reaction;
-                                    reactions.splice(reactions.indexOf(reaction), 1);
-                                    break;
-                                }
-                            }
-                            if (brokenReaction === undefined) {
-                                await VK_API.messagesSend(group, from_id, 'Такой реакции нет.');
-                                break;
-                            } else {
-                                user.reactions = reactions;
-                                await user.save();
-                                await models.ReactionPers.findByIdAndDelete(brokenReaction._id);
-                                await VK_API.messagesSend(group, from_id, `Реакция удалена.`);
-                                break;
-                            }
-                        }
-                    }
-                } catch (e) {
-                    console.log(e);
-                }
             }
 
             if (!isConf && from_id === 153146966 && text === 's') {
