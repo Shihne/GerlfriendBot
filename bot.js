@@ -1,31 +1,18 @@
 'use strict';
 
 const Determination = require('./determination');
+const VK_API = require('./vk_api');
 const process = require('./processing');
-const post = require('./posting');
-const gett = require('./getting');
 
 class Bot {
     static setOnline() {
         const groups = Determination.determForOnline();
         groups.forEach(async group => {
-            try {
-                const status = await gett('groups.getOnlineStatus', {
-                    group_id: group.ID,
-                    access_token: group.TOKEN,
-                    v: group.V
-                });
-                if (status.response.status === 'none') {
-                    await post('groups.enableOnline', {
-                        group_id: group.ID,
-                        access_token: group.TOKEN,
-                        v: group.V
-                    });
-                } else {
-                    console.log(group.NAME + ' is online');
-                }
-            } catch (e) {
-                console.log('Проблемы с получением статуса');
+            const status = await VK_API.groupsGetOnlineStatus(group);
+            if (status === 'none') {
+                await VK_API.groupsEnableOnline(group);
+            } else {
+                console.log(group.NAME + ', возможно, онлайн');
             }
         });
     }

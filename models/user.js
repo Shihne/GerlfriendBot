@@ -10,7 +10,13 @@ const schema = new Schema(
         },
         status: {
             type: String
-        }
+        },
+        reactions: [
+            {
+                type: Schema.Types.ObjectID,
+                ref: 'ReactionPers'
+            }
+        ],
     },
     {
         timestamps: false

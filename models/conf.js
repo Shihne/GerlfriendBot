@@ -20,6 +20,12 @@ const schema = new Schema(
                 ref: 'MarriageProposal'
             }
         ],
+        reactions: [
+            {
+                type: Schema.Types.ObjectID,
+                ref: 'ReactionConf'
+            }
+        ],
         //ONLY FOR SCoBLC
         membersIds: [
             {
