@@ -6,7 +6,7 @@ const keyboards = require('./keyboards');
 const models = require('./models');
 
 let e = 1;
-const calls = [/^бот/i, /^врай/i, /^\[club171708536\|\*wry_bot]/, /^\[club171708536\|@wry_bot]/];
+const calls = [/^бот/i, /^падружка/i, /^\[club200353752\|\*bot_padruzhka]/, /^\[club200353752\|@bot_padruzhka]/];
 const whoComs = ['Согласно записям в базе данных,', 'По результатам исследования,', 'Определённо,', 'Несомненно,'];
 const probComs = ['По моим подсчётам ', 'Согласно полученным вычислениям ', 'Прогнозирую, что '];
 const noComs = ['Нет', 'Неа', 'Сомневаюсь', 'Ну нет', 'Ответ отрицательный', 'Вряд ли'];
