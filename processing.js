@@ -75,7 +75,7 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
 
 
             if (g === '3' || /список.*команд/i.test(text)) {
-                await send(group, peer_id, `
+                await VK_API.messagesSend(group, peer_id, `
                     Доступные команды на текущий момент. 
                     1)На сообщение со словом "таймер" и числом (в минутах или секундах) отсчитываю время;
                     2)На команды со словом "кто, кого, кому, чей, чьё, чья" выбираю участника беседы; 
