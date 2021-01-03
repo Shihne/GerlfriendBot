@@ -553,7 +553,7 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                             const isReacting = reactions.some(reaction => reaction.stimulus === st);
                             if (!isReacting) {
                                 const newReaction = await models.ReactionPers.create({
-                                    conf: user._id,
+                                    ownerID: user._id,
                                     stimulus: st,
                                     answer: an
                                 });
