@@ -111,6 +111,73 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                 break;
             }
 
+            if (/удали.*реакци.*\[.*]/i.test(text)) {
+                const st = text.slice(text.match(/\[/).index + 1, text.match(/]/).index);
+                console.log(st);
+                try {
+                    if (isConf) {
+                        const conf = await models.Conf.findOne({
+                            idVK: peer_id
+                        }).populate('reactions');
+                        if (!conf || conf.reactions.length === 0) {
+                            await VK_API.messagesSend(group, peer_id, `Здесь нет реакций.`);
+                            break;
+                        } else {
+                            const reactions = conf.reactions;
+                            let brokenReaction;
+                            for (const reaction of reactions) {
+                                if (reaction.stimulus === st) {
+                                    brokenReaction = reaction;
+                                    reactions.splice(reactions.indexOf(reaction), 1);
+                                    break;
+                                }
+                            }
+                            if (brokenReaction === undefined) {
+                                await VK_API.messagesSend(group, peer_id, 'Такой реакции нет.');
+                                break;
+                            } else {
+                                conf.reactions = reactions;
+                                await conf.save();
+                                await models.ReactionConf.findByIdAndDelete(brokenReaction._id);
+
+                                await VK_API.messagesSend(group, peer_id, `Реакция удалена.`);
+                                break;
+                            }
+                        }
+                    } else {
+                        const user = await models.User.findOne({
+                            idVK: from_id
+                        }).populate('reactions');
+                        if (!user || user.reactions.length === 0) {
+                            await VK_API.messagesSend(group, from_id, `У тебя нет реакций.`);
+                            break;
+                        } else {
+                            const reactions = user.reactions;
+                            let brokenReaction;
+                            for (const reaction of reactions) {
+                                if (reaction.stimulus === st) {
+                                    brokenReaction = reaction;
+                                    reactions.splice(reactions.indexOf(reaction), 1);
+                                    break;
+                                }
+                            }
+                            if (brokenReaction === undefined) {
+                                await VK_API.messagesSend(group, from_id, 'Такой реакции нет.');
+                                break;
+                            } else {
+                                user.reactions = reactions;
+                                await user.save();
+                                await models.ReactionPers.findByIdAndDelete(brokenReaction._id);
+                                await VK_API.messagesSend(group, from_id, `Реакция удалена.`);
+                                break;
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.log(e);
+                }
+            }
+
             if (reactions.length !== 0) {
                 let isDone = false;
                 for (const reaction of reactions) {
@@ -207,73 +274,6 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                     console.log(e);
                 }
                 break;
-            }
-
-            if (/удали.*реакци.*\[.*]/i.test(text)) {
-                const st = text.slice(text.match(/\[/).index + 1, text.match(/]/).index);
-                console.log(st);
-                try {
-                    if (isConf) {
-                        const conf = await models.Conf.findOne({
-                            idVK: peer_id
-                        }).populate('reactions');
-                        if (!conf || conf.reactions.length === 0) {
-                            await VK_API.messagesSend(group, peer_id, `Здесь нет реакций.`);
-                            break;
-                        } else {
-                            const reactions = conf.reactions;
-                            let brokenReaction;
-                            for (const reaction of reactions) {
-                                if (reaction.stimulus === st) {
-                                    brokenReaction = reaction;
-                                    reactions.splice(reactions.indexOf(reaction), 1);
-                                    break;
-                                }
-                            }
-                            if (brokenReaction === undefined) {
-                                await VK_API.messagesSend(group, peer_id, 'Такой реакции нет.');
-                                break;
-                            } else {
-                                conf.reactions = reactions;
-                                await conf.save();
-                                await models.ReactionConf.findByIdAndDelete(brokenReaction._id);
-
-                                await VK_API.messagesSend(group, peer_id, `Реакция удалена.`);
-                                break;
-                            }
-                        }
-                    } else {
-                        const user = await models.User.findOne({
-                            idVK: from_id
-                        }).populate('reactions');
-                        if (!user || user.reactions.length === 0) {
-                            await VK_API.messagesSend(group, from_id, `У тебя нет реакций.`);
-                            break;
-                        } else {
-                            const reactions = user.reactions;
-                            let brokenReaction;
-                            for (const reaction of reactions) {
-                                if (reaction.stimulus === st) {
-                                    brokenReaction = reaction;
-                                    reactions.splice(reactions.indexOf(reaction), 1);
-                                    break;
-                                }
-                            }
-                            if (brokenReaction === undefined) {
-                                await VK_API.messagesSend(group, from_id, 'Такой реакции нет.');
-                                break;
-                            } else {
-                                user.reactions = reactions;
-                                await user.save();
-                                await models.ReactionPers.findByIdAndDelete(brokenReaction._id);
-                                await VK_API.messagesSend(group, from_id, `Реакция удалена.`);
-                                break;
-                            }
-                        }
-                    }
-                } catch (e) {
-                    console.log(e);
-                }
             }
 
             const timer = time => new Promise(resolve => {
