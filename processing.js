@@ -86,7 +86,7 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
             if (!canSend)
                 break;
 
-            if (g === '3' || /список.*команд/i.test(text)) {
+            if (g === '3' || /\bсписок\b.*\bкоманд\b/i.test(text)) {
                 await VK_API.messagesSend(group, peer_id, `
                     Доступные команды на текущий момент. 
                     1)На сообщение со словом "таймер" и числом (в минутах или секундах) отсчитываю время;
@@ -111,7 +111,14 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                 break;
             }
 
-            if (/удали.*реакци.*\[.*]/i.test(text)) {
+            if (/\bсан/i.test(text) && /\bсаш/i.test(text) && /\bалекса/i.test(text) && /\bшурик/i.test(text)) {
+                const r = Math.floor(Math.random() * 100);
+                if (r < 10)
+                    await VK_API.messagesSend(group, peer_id, secretComs[Math.floor(Math.random() * secretComs.length)]);
+                break;
+            }
+
+            if (/\bудали.*\bреакци.*\[.*]/i.test(text)) {
                 const st = text.slice(text.match(/\[/).index + 1, text.match(/]/).index);
                 console.log(st);
                 try {
@@ -191,7 +198,7 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                     break;
             }
 
-            if (/добав.*реакци.*\[.*].*\[.*]/i.test(text)) {
+            if (/\bдобав.*\bреакци.*\[.*].*\[.*]/i.test(text)) {
                 const st = text.slice(text.match(/\[/).index + 1, text.match(/]/).index);
                 console.log(st);
                 text = text.slice(text.match(/]/).index + 1);
@@ -280,7 +287,7 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                 setTimeout(resolve, time);
             });
 
-            if (/таймер/i.test(text)) {
+            if (/\bтаймер\b/i.test(text)) {
                 const regexp = /\d/g;
                 const t = text.match(regexp).join('');
                 const time = +JSON.parse(t);
@@ -298,7 +305,7 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                 break;
             }
 
-            if (/вероятность/i.test(text)) {
+            if (/\bвероятность\b/i.test(text)) {
                 const rand = Math.floor(Math.random() * 100);
                 await VK_API.messagesSend(group, peer_id, probComs[Math.floor(Math.random()*probComs.length)] + rand + '%.');
                 await timer(1);
@@ -308,7 +315,7 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                 break;
             }
 
-            if (/когда/i.test(text)) {
+            if (/\bкогда\b/i.test(text)) {
                 switch (Math.floor(Math.random() * 8)) {
                     case 0 :
                         await VK_API.messagesSend(group, peer_id, probComs[Math.floor(Math.random()*probComs.length)] + 'никогда.');
@@ -377,7 +384,7 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                 return choicen;
             };
 
-            if (/кто/i.test(text)) {
+            if (/\bкто\b/i.test(text)) {
                 let confID = peer_id;
                 if (!isConf) {
                     if (peer_id !== 541553471)
@@ -389,7 +396,7 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                 await VK_API.messagesSend(group, peer_id, `${whoComs[Math.floor(Math.random() * whoComs.length)]} ${choicen.first_name} ${choicen.last_name}.`);
                 break;
             }
-            if (/кого/i.test(text) || /чей/i.test(text) || /чьё/i.test(text) || /чья/i.test(text)) {
+            if (/\bкого\b/i.test(text) || /\bчей\b/i.test(text) || /\bчьё\b/i.test(text) || /\bчья\b/i.test(text)) {
                 let confID = peer_id;
                 if (!isConf) {
                     if (peer_id !== 541553471)
@@ -401,7 +408,7 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                 await VK_API.messagesSend(group, peer_id, `${whoComs[Math.floor(Math.random() * whoComs.length)]} ${choicen.first_name} ${choicen.last_name}.`);
                 break;
             }
-            if (/кому/i.test(text)) {
+            if (/\bкому\b/i.test(text)) {
                 let confID = peer_id;
                 if (!isConf) {
                     if (peer_id !== 541553471)
@@ -428,7 +435,7 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                 break;
             }
 
-            if (isConf && /брак.*принять/i.test(text)) {
+            if (isConf && /\bбрак\b.*\bпринять\b/i.test(text)) {
                 try {
                     const conf = await models.Conf.findOne({
                         idVK: peer_id
@@ -495,7 +502,7 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                 break;
             }
 
-            if (isConf && /брак.*отклонить/i.test(text)) {
+            if (isConf && /\bбрак\b.*\bотклонить\b/i.test(text)) {
                 try {
                     const conf = await models.Conf.findOne({
                         idVK: peer_id
@@ -521,7 +528,7 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                 break;
             }
 
-            if (isConf && /список.*браков/i.test(text)) {
+            if (isConf && /\bсписок\b.*\bбраков\b/i.test(text)) {
                 let message = ``;
                 try {
                     const conf = await models.Conf.findOne({
@@ -550,7 +557,7 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
 
             }
 
-            if (isConf && /развод/i.test(text)) {
+            if (isConf && /\bразвод\b/i.test(text)) {
                 const conf = await models.Conf.findOne({
                     idVK: peer_id
                 }).populate('marriages');
@@ -586,7 +593,7 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                 }
             }
 
-            if (isConf && /брак/i.test(text)) {
+            if (isConf && /\bбрак\b/i.test(text)) {
                 let brideID;
                 let ping = false;
                 const ib = text.indexOf('[id');
