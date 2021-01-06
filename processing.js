@@ -87,7 +87,7 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
             if (!canSend)
                 break;
 
-            if (g === '3' || /\sсписок\s.*\sкоманд/i.test(text)) {
+            if (g === '3' || /\sсписок.*\sкоманд/i.test(text)) {
                 await VK_API.messagesSend(group, peer_id, `
                     Доступные команды на текущий момент. 
                     1)На сообщение со словом "таймер" и числом (в минутах или секундах) отсчитываю время;
@@ -438,7 +438,7 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                 break;
             }
 
-            if (isConf && /\sбрак\s.*\sпринять/i.test(text)) {
+            if (isConf && /\sбрак.*\sпринять/i.test(text)) {
                 try {
                     const conf = await models.Conf.findOne({
                         idVK: peer_id
@@ -505,7 +505,7 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                 break;
             }
 
-            if (isConf && /\sбрак\s.*\sотклонить/i.test(text)) {
+            if (isConf && /\sбрак.*\sотклонить/i.test(text)) {
                 try {
                     const conf = await models.Conf.findOne({
                         idVK: peer_id
@@ -531,7 +531,7 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                 break;
             }
 
-            if (isConf && /\sсписок\s.*\sбраков/i.test(text)) {
+            if (isConf && /\sсписок.*\sбраков/i.test(text)) {
                 let message = ``;
                 try {
                     const conf = await models.Conf.findOne({
