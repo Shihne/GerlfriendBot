@@ -50,6 +50,7 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                     reactions = conf.reactions;
                 }
             } else {
+                text = " " + text;
                 if (payload !== undefined)
                     g = JSON.parse(payload).button;
                 const user = await models.User.findOne({
