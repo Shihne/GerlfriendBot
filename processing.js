@@ -113,9 +113,11 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
 
             if (/\sсан/i.test(text) && /\sсаш/i.test(text) && /\sалекса/i.test(text) && /\sшурик/i.test(text)) {
                 const r = Math.floor(Math.random() * 100);
-                if (r < 10)
+                if (r > 10) {
                     await VK_API.messagesSend(group, peer_id, secretComs[Math.floor(Math.random() * secretComs.length)]);
-                break;
+                    break;
+                }
+
             }
 
             if (/\sудали.*\sреакци.*\[.*]/i.test(text)) {
