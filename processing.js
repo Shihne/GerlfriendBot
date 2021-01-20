@@ -112,14 +112,14 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                 break;
             }
 
-            if (/\sсан/i.test(text) || /\sсаш/i.test(text) || /\sалекса/i.test(text) || /\sшурик/i.test(text)) {
+            /*if (/\sсан/i.test(text) || /\sсаш/i.test(text) || /\sалекса/i.test(text) || /\sшурик/i.test(text)) {
                 const r = Math.floor(Math.random() * 100);
                 if (r > 10) {
                     await VK_API.messagesSend(group, peer_id, secretComs[Math.floor(Math.random() * secretComs.length)]);
                     break;
                 }
 
-            }
+            }*/
 
             if (/\sудали.*\sреакци.*\[.*]/i.test(text)) {
                 const st = text.slice(text.match(/\[/).index + 1, text.match(/]/).index);
@@ -395,8 +395,8 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                     else {
                         confID = 2000000002;
                         if (/\sвайф/i.test(text) && (/\sсан/i.test(text) || /\sсаш/i.test(text) || /\sалекса/i.test(text))) {
-                            const vins = await VK_API.usersGet(peer_id, group.V, group.TOKEN);
-                            await VK_API.messagesSend(group, peer_id, `${whoComs[Math.floor(Math.random() * whoComs.length)]} ${vins.first_name} ${vins.last_name}.`);
+                            //const vins = await VK_API.usersGet(peer_id, group.V, group.TOKEN);
+                            await VK_API.messagesSend(group, peer_id, `Не могу сказать.`);
                             break;
                         }
                     }
