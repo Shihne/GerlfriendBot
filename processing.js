@@ -112,10 +112,10 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                 break;
             }
 
-            if (/\s[сcs][аa][ншnh]/i.test(text) || /\s[аa][лl][еe][кk][сcs][аa]/i.test(text) || /\sшурик/i.test(text)) {
+            /*if (/\s[сcs][аa][ншnh]/i.test(text) || /\s[аa][лl][еe][кk][сcs][аa]/i.test(text) || /\sшурик/i.test(text)) {
                 await VK_API.messagesSend(group, peer_id, secretComs[Math.floor(Math.random() * secretComs.length)]);
                 break;
-            }
+            }*/
 
             if (/\sудали.*\sреакци.*\[.*]/i.test(text)) {
                 const st = text.slice(text.match(/\[/).index + 1, text.match(/]/).index);
