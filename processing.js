@@ -87,11 +87,11 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
             } else {
                 if (payload !== undefined)
                     g = JSON.parse(payload).button;
-                const user = await models.User.findOne({
+                database = await models.User.findOne({
                     idVK: from_id
                 }).populate('reactions');
-                if (user) {
-                    reactions = user.reactions;
+                if (database) {
+                    reactions = database.reactions;
                 }
             }
 
