@@ -511,42 +511,56 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
             if (/[^\p{Alpha}]кто[^\p{Alpha}\p{Pd}]/i.test(text) || /^кто[^\p{Alpha}\p{Pd}]/i.test(text) || /[^\p{Alpha}]кто$/i.test(text) || /^кто$/i.test(text)) {
                 if ((/[^\p{Alpha}]вайф/i.test(text) || /^вайф/i.test(text)) && (/[^\p{Alpha}]са[нш]/i.test(text) || /[^\p{Alpha}]алекса/i.test(text) || /^са[нш]/i.test(text) || /^алекса/i.test(text))) {
                     //const vins = await VK_API.usersGet(peer_id, group.V, group.TOKEN);
-                    await VK_API.messagesSend(group, peer_id, `Никто. Отвали.`);
+                    await VK_API.messagesSend(group, peer_id, `Никто. Отстань.`);
                     break;
                 }
-                let confID = peer_id;
                 if (!isConf) {
                     if (peer_id !== 541553471)
                         break;
                     else {
-                        confID = 2000000002;
+                        database = await models.Conf.findOne({
+                            idVK: 2000000002
+                        });
+                        const choicen = await answerWho(2000000002);
+                        await VK_API.messagesSend(group, peer_id, `${whoComs[Math.floor(Math.random() * whoComs.length)]} ${choicen.first_name} ${choicen.last_name}.`);
+                        break;
                     }
                 }
-                const choicen = await answerWho(confID);
+                const choicen = await answerWho(peer_id);
                 await VK_API.messagesSend(group, peer_id, `${whoComs[Math.floor(Math.random() * whoComs.length)]} ${choicen.first_name} ${choicen.last_name}.`);
                 break;
             }
             if (/[^\p{Alpha}]кого[^\p{Alpha}\p{Pd}]/i.test(text) || /^кого[^\p{Alpha}\p{Pd}]/i.test(text) || /[^\p{Alpha}]кого$/i.test(text) || /^кого$/i.test(text) ||
                 /[^\p{Alpha}]чей[^\p{Alpha}\p{Pd}]/i.test(text) || /^чей[^\p{Alpha}\p{Pd}]/i.test(text) || /[^\p{Alpha}]чей$/i.test(text) || /^чей$/i.test(text) ||
                 /[^\p{Alpha}]чь[еёя][^\p{Alpha}\p{Pd}]/i.test(text) || /^чь[еёя][^\p{Alpha}\p{Pd}]/i.test(text) || /[^\p{Alpha}]чь[еёя]$/i.test(text) || /^чь[еёя]$/i.test(text)) {
-                let confID = peer_id;
                 if (!isConf) {
                     if (peer_id !== 541553471)
                         break;
-                    else
-                        confID = 2000000002;
+                    else {
+                        database = await models.Conf.findOne({
+                            idVK: 2000000002
+                        });
+                        const choicen = await answerWho(2000000002, 'gen');
+                        await VK_API.messagesSend(group, peer_id, `${whoComs[Math.floor(Math.random() * whoComs.length)]} ${choicen.first_name} ${choicen.last_name}.`);
+                        break;
+                    }
                 }
-                const choicen = await answerWho(confID, 'gen');
+                const choicen = await answerWho(peer_id, 'gen');
                 await VK_API.messagesSend(group, peer_id, `${whoComs[Math.floor(Math.random() * whoComs.length)]} ${choicen.first_name} ${choicen.last_name}.`);
                 break;
             }
             if (/[^\p{Alpha}]кому[^\p{Alpha}\p{Pd}]/i.test(text) || /^кому[^\p{Alpha}\p{Pd}]/i.test(text) || /[^\p{Alpha}]кому$/i.test(text) || /^кому$/i.test(text)) {
-                let confID = peer_id;
                 if (!isConf) {
                     if (peer_id !== 541553471)
                         break;
-                    else
-                        confID = 2000000002;
+                    else {
+                        database = await models.Conf.findOne({
+                            idVK: 2000000002
+                        });
+                        const choicen = await answerWho(2000000002, 'dat');
+                        await VK_API.messagesSend(group, peer_id, `${whoComs[Math.floor(Math.random() * whoComs.length)]} ${choicen.first_name} ${choicen.last_name}.`);
+                        break;
+                    }
                 }
                 const choicen = await answerWho(confID, 'dat');
                 await VK_API.messagesSend(group, peer_id, `${whoComs[Math.floor(Math.random() * whoComs.length)]} ${choicen.first_name} ${choicen.last_name}.`);
