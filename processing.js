@@ -208,13 +208,17 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                                 const answers = updReaction.answer;
                                 console.log(answers);
                                 console.log(els);
+                                const br = [];
                                 for (const answer of answers)
                                     for (const el of els) {
-                                        console.log(answer + " : " + el.slice(1, -1));
+                                        //console.log(answer + " : " + el.slice(1, -1));
                                         if (answer === el.slice(1, -1)) {
-                                            answers.splice(answers.indexOf(answer), 1);
+                                            br.push(answer);
+                                            //answers.splice(answers.indexOf(answer), 1);
                                         }
                                     }
+                                for (const b of br)
+                                    answers.splice(answers.indexOf(b), 1);
                                 updReaction.answer = answers;
                                 await updReaction.save();
                                 await VK_API.messagesSend(group, peer_id, `Реакция обновлена.`);
