@@ -3,7 +3,9 @@ const Marriage = require('./marriage');
 const MarriageProposal = require('./marriage-proposal');
 const ReactionConf = require('./reaction-conf');
 const ReactionPers = require('./reaction-pers');
+const Reaction = require('./reaction');
 const User = require('./user');
+const Fact = require('./fact');
 
 module.exports = {
     Conf,
@@ -11,5 +13,7 @@ module.exports = {
     MarriageProposal,
     ReactionConf,
     ReactionPers,
-    User
+    Reaction,
+    User,
+    Fact
 };

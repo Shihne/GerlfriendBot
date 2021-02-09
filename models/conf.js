@@ -23,7 +23,7 @@ const schema = new Schema(
         reactions: [
             {
                 type: Schema.Types.ObjectID,
-                ref: 'ReactionConf'
+                ref: 'Reaction'
             }
         ],
         //ONLY FOR SCoBLC

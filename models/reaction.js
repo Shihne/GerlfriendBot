@@ -3,21 +3,20 @@ const Schema = mongoose.Schema;
 
 const schema = new Schema(
     {
-        idVK: {
+        ownerID: {
             type: Number,
-            required: true,
-            unique: true
+            required: true
         },
-        status: {
+        stimulus: {
             type: String,
-            default: 'n'
+            required: true
         },
-        reactions: [
+        answer: [
             {
-                type: Schema.Types.ObjectID,
-                ref: 'Reaction'
+                type: String
             }
-        ],
+        ]
+
     },
     {
         timestamps: false
@@ -28,4 +27,4 @@ schema.set('toJSON', {
     virtuals: true
 });
 
-module.exports = mongoose.model('User', schema);
+module.exports = mongoose.model('Reaction', schema);

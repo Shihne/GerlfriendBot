@@ -4,9 +4,10 @@ const VK_API = require('./vk_api');
 
 const keyboards = require('./keyboards');
 const models = require('./models');
+const facts = require('./facts');
 
 let e = 1;
-const calls = [/^бот/i, /^падружка/i, /^\[club200353752\|\*bot_padruzhka]/, /^\[club200353752\|@bot_padruzhka]/];
+const calls = [/^бот/i, /\sбот/i, /^падружка/i, /\sпадружка/i, /^\[club200353752\|\*bot_padruzhka]/, /^\[club200353752\|@bot_padruzhka]/];
 const whoComs = ['Согласно записям в базе данных,', 'По результатам исследования,', 'Определённо,', 'Несомненно,'];
 const probComs = ['По моим подсчётам ', 'Согласно полученным вычислениям ', 'Прогнозирую, что '];
 const noComs = ['Нет', 'Неа', 'Сомневаюсь', 'Ну нет', 'Ответ отрицательный', 'Вряд ли'];
@@ -23,34 +24,67 @@ const yearComs = ['в следующем месяце.', 'через 2 меся�
 const decadesComs = ['в следующем году.', 'через 2 года.', 'через 3 года.', 'через 4 года.', 'через 5 лет.', 'через 6 лет.', 'через 7 лет.', 'через 8 лет.', 'через 9 лет.', 'через 10 лет.'];
 const secretComs = ['[[Доступ запрещён]]', '{{Данные удалены}}', 'Секретные сведения', 'Конфиденциальная информация'];
 
-module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_messages, reply_message, id}) => {
+module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_messages, reply_message, attachments}) => {
     switch (group.NAME) {
         case 'gerlfriend' :
             let g;
             let isConf = false;
             let isCalling;
+            let database;
             let reactions = [];
+            let marriageProposals = [];
+            let marriages = [];
             if (peer_id > 2000000000) {
+
+                if (peer_id === 2000000002 && action !== undefined) {
+                    switch (action.type) {
+                        case 'chat_kick_user' :
+                            const conf = await models.Conf.findOne({
+                                idVK: peer_id
+                            });
+                            conf.membersIds.splice(conf.membersIds.indexOf(action.member_id), 1);
+                            await conf.save();
+                            break;
+                        case 'chat_invite_user' :
+                        case 'chat_invite_user_by_link' :
+                            const conf1 = await models.Conf.findOne({
+                                idVK: peer_id
+                            });
+                            conf1.membersIds.push(action.member_id);
+                            await conf1.save();
+                            break;
+                    }
+                    break;
+                }
                 isConf = true;
                 isCalling = calls.some(call => {
 
                     if (call.test(text)) {
-                        let startIndex = text.match(call)[0].length + 1;
-                        if (text[startIndex] === ' ')
-                            startIndex = startIndex + 1;
-                        text = text.slice(startIndex - 1);
+                        let bot = text.match(call)[0];
+                        let startText = text.match(call).index;
+                        let endText = startText + bot.length;
+                        if (text[endText + 1] === ' ')
+                            endText = endText + 1;
+                        text = text.slice(0, startText) + text.slice(endText);
                         return true;
                     }
                 });
-                console.log(isCalling, text);
-                const conf = await models.Conf.findOne({
+                //console.log(isCalling, text);
+                if (!isCalling) {
+                    break;
+                }
+                database = await models.Conf.findOne({
                     idVK: peer_id
-                }).populate('reactions');
-                if (conf) {
-                    reactions = conf.reactions;
+                }).populate('marriages')
+                    .populate('marriageProposals')
+                    .populate('reactions');
+
+                if (database) {
+                    marriages = database.marriages;
+                    marriageProposals = database.marriageProposals;
+                    reactions = database.reactions;
                 }
             } else {
-                text = " " + text;
                 if (payload !== undefined)
                     g = JSON.parse(payload).button;
                 const user = await models.User.findOne({
@@ -60,32 +94,6 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                     reactions = user.reactions;
                 }
             }
-
-            if (peer_id === 2000000002 && action !== undefined) {
-                switch (action.type) {
-                    case 'chat_kick_user' :
-                        const conf = await models.Conf.findOne({
-                            idVK: peer_id
-                        });
-                        conf.membersIds.splice(conf.membersIds.indexOf(action.member_id), 1);
-                        await conf.save();
-                        break;
-                    case 'chat_invite_user' :
-                    case 'chat_invite_user_by_link' :
-                        const conf1 = await models.Conf.findOne({
-                            idVK: peer_id
-                        });
-                        conf1.membersIds.push(action.member_id);
-                        await conf1.save();
-                        break;
-                }
-                break;
-            }
-
-
-            const canSend = !isConf || (isConf && isCalling);
-            if (!canSend)
-                break;
 
             if (g === '3' || /\sсписок.*\sкоманд/i.test(text)) {
                 await VK_API.messagesSend(group, peer_id, `
@@ -117,78 +125,176 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                 break;
             }*/
 
-            if (/\sудали.*\sреакци.*\[.*]/i.test(text)) {
-                const st = text.slice(text.match(/\[/).index + 1, text.match(/]/).index);
-                console.log(st);
+            if (/назнач.*\sстатус.*\[[^\[\]]+]/i.test(text)) {
                 try {
-                    if (isConf) {
-                        const conf = await models.Conf.findOne({
-                            idVK: peer_id
-                        }).populate('reactions');
-                        if (!conf || conf.reactions.length === 0) {
-                            await VK_API.messagesSend(group, peer_id, `Здесь нет реакций.`);
-                            break;
-                        } else {
-                            const reactions = conf.reactions;
-                            let brokenReaction;
-                            for (const reaction of reactions) {
-                                if (reaction.stimulus === st) {
-                                    brokenReaction = reaction;
-                                    reactions.splice(reactions.indexOf(reaction), 1);
-                                    break;
-                                }
-                            }
-                            if (brokenReaction === undefined) {
-                                await VK_API.messagesSend(group, peer_id, 'Такой реакции нет.');
-                                break;
-                            } else {
-                                conf.reactions = reactions;
-                                await conf.save();
-                                await models.ReactionConf.findByIdAndDelete(brokenReaction._id);
+                    const s = await models.User.findOne({
+                        idVK: from_id
+                    });
+                    if (!s || s.status !== 'G')
+                        break;
 
-                                await VK_API.messagesSend(group, peer_id, `Реакция удалена.`);
+                    const status = text.match(/\[[^\[\]]+]/)[0].slice(1, -1);
+                    let id;
+                    if (/\[id\d{9}/.test(text)) {
+                        id = +text.match(/\[id\d{9}/)[0].slice(3);
+                    } else if (fwd_messages.length !== 0) {
+                        id = fwd_messages[0].from_id;
+                    } else if (reply_message !== undefined) {
+                        id = reply_message.from_id;
+                    } else {
+                        await VK_API.messagesSend(group, peer_id, 'Не вижу, кому надо назначить статус.');
+                        break;
+                    }
+
+                    const user = await models.User.findOne({
+                        idVK: id
+                    });
+                    if (!user) {
+                        await models.User.create({
+                            idVK: id,
+                            status: status
+                        });
+                    } else {
+                        user.status = status;
+                        await user.save();
+                    }
+                    const name = await VK_API.usersGet(id, group.V, group.TOKEN, 'dat');
+                    await VK_API.messagesSend(group, peer_id, `${name.first_name} ${name.last_name} назначен статус ${status}`);
+                } catch (e) {
+                    console.log(e);
+                }
+                break;
+            }
+
+            if (/список.*\sреакций/i.test(text)) {
+                if (!database || reactions.length === 0) {
+                    await VK_API.messagesSend(group, peer_id, `Реакций нет.`);
+                } else {
+                    let message = ``;
+                    for (const reaction of reactions) {
+                        message += `Стимул - [${reaction.stimulus}]. Ответ(ы) - [${reaction.answer}].\n`;
+                    }
+                    await VK_API.messagesSend(group, peer_id, message);
+                }
+                break;
+            }
+
+            if (/удали.*\sреакци.*\[[^\[\]]+]/i.test(text)) {
+                const els = text.match(/\[[^\[\]]+]/g);
+                const st = els[0].slice(1, -1);
+                els.splice(0, 1);
+                try {
+                    if (!database || reactions.length === 0) {
+                        await VK_API.messagesSend(group, peer_id, `Реакции отсутствуют.`);
+                    } else {
+                        let brokenReaction;
+                        for (const reaction of reactions) {
+                            if (reaction.stimulus === st) {
+                                brokenReaction = reaction;
                                 break;
                             }
                         }
-                    } else {
-                        const user = await models.User.findOne({
-                            idVK: from_id
-                        }).populate('reactions');
-                        if (!user || user.reactions.length === 0) {
-                            await VK_API.messagesSend(group, from_id, `У тебя нет реакций.`);
-                            break;
+                        if (brokenReaction === undefined) {
+                            await VK_API.messagesSend(group, peer_id, `Реакции на такое сообщение нет.`);
                         } else {
-                            const reactions = user.reactions;
-                            let brokenReaction;
-                            for (const reaction of reactions) {
-                                if (reaction.stimulus === st) {
-                                    brokenReaction = reaction;
-                                    reactions.splice(reactions.indexOf(reaction), 1);
-                                    break;
-                                }
-                            }
-                            if (brokenReaction === undefined) {
-                                await VK_API.messagesSend(group, from_id, 'Такой реакции нет.');
-                                break;
+                            if (els.length === 0) {
+                                reactions.splice(reactions.indexOf(brokenReaction), 1);
+                                database.reactions = reactions;
+                                await database.save();
+                                await models.Reaction.findByIdAndDelete(brokenReaction._id);
+                                await VK_API.messagesSend(group, peer_id, `Реакция на [${st}] удалена.`);
                             } else {
-                                user.reactions = reactions;
-                                await user.save();
-                                await models.ReactionPers.findByIdAndDelete(brokenReaction._id);
-                                await VK_API.messagesSend(group, from_id, `Реакция удалена.`);
-                                break;
+                                const updReaction = await models.Reaction.findById(brokenReaction._id);
+                                const answers = updReaction.answer;
+                                console.log(answers);
+                                console.log(els);
+                                for (const answer of answers)
+                                    for (const el of els) {
+                                        console.log(answer + " : " + el.slice(1, -1));
+                                        if (answer === el.slice(1, -1)) {
+                                            answers.splice(answers.indexOf(answer), 1);
+                                        }
+                                    }
+                                updReaction.answer = answers;
+                                await updReaction.save();
+                                await VK_API.messagesSend(group, peer_id, `Реакция обновлена.`);
                             }
                         }
                     }
                 } catch (e) {
                     console.log(e);
+                    await VK_API.messagesSend(group, peer_id, `Произошла ошибка.`);
                 }
+                break;
+            }
+
+            if (/добав.*\sреакци.*\[[^\[\]]+].*\[[^\[\]]+]/i.test(text) || /обнов.*\sреакци.*\[[^\[\]]+].*\[[^\[\]]+]/i.test(text)) {
+                const els = text.match(/\[[^\[\]]+]/g);
+                const st = els[0].slice(1, -1);
+                els.splice(0, 1);
+                //const an = els[1].slice(1, -1);
+                const an = [];
+                for (const el of els) {
+                    an.push(el.slice(1, -1));
+                }
+                try {
+                    if (!database) {
+                        let newDB;
+                        //let reaction;
+                        if (isConf) {
+                            newDB = await models.Conf.create({
+                                idVK: peer_id
+                            });
+                        } else {
+                            newDB = await models.User.create({
+                                idVK: from_id
+                            });
+                        }
+                        const reaction = await models.Reaction.create({
+                            ownerID: peer_id,
+                            stimulus: st,
+                            answer: an
+                        });
+                        newDB.reactions = [reaction];
+                        await newDB.save();
+                        await VK_API.messagesSend(group, peer_id, `Реакция создана.`);
+                    } else {
+                        let existingID = '';
+                        const isReacting = reactions.some(reaction => {
+                            if (reaction.stimulus === st) {
+                                existingID = reaction._id;
+                                return true;
+                            }
+                        });
+                        if (!isReacting) {
+                            const newReaction = await models.Reaction.create({
+                                ownerID: peer_id,
+                                stimulus: st,
+                                answer: an
+                            });
+                            database.reactions.push(newReaction);
+                            await database.save();
+                            await VK_API.messagesSend(group, peer_id, `Реакция создана.`);
+                        } else {
+                            const updReaction = await models.Reaction.findById(existingID);
+                            for (const a of an)
+                                updReaction.answer.push(a);
+                            await updReaction.save();
+                            await VK_API.messagesSend(group, peer_id, 'Реакция обновлена.');
+                        }
+                    }
+                } catch (e) {
+                    console.log(e);
+                    await VK_API.messagesSend(group, peer_id, 'Произошла ошибка(');
+                }
+                break;
             }
 
             if (reactions.length !== 0) {
                 let isDone = false;
                 for (const reaction of reactions) {
                     if (text.indexOf(reaction.stimulus) !== -1) {
-                        await VK_API.messagesSend(group, peer_id, reaction.answer);
+                        await VK_API.messagesSend(group, peer_id, reaction.answer[Math.floor(Math.random() * reaction.answer.length)]);
                         isDone = true;
                         break;
                     }
@@ -197,102 +303,120 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                     break;
             }
 
-            if (/\sдобав.*\sреакци.*\[.*].*\[.*]/i.test(text)) {
-                const st = text.slice(text.match(/\[/).index + 1, text.match(/]/).index);
-                console.log(st);
-                text = text.slice(text.match(/]/).index + 1);
-                console.log(text);
-                const an = text.slice(text.match(/\[/).index + 1, text.match(/]/).index);
-                console.log(an);
+            if (/добав.*\sфакт.*\[[^\[\]]+]/i.test(text)) {
+                const newFacts = text.match(/\[[^\[\]]+]/g);
                 try {
-                    if (isConf) {
-                        const conf = await models.Conf.findOne({
-                            idVK: peer_id
-                        }).populate('reactions');
-                        if (!conf) {
-                            const newConf = await models.Conf.create({
-                                idVK: peer_id
+                    let lengthDB = await models.Fact.count();
+                    let addCount = 0;
+                    for (const newFact of newFacts) {
+                        const existFact = await models.Fact.findOne({
+                            text: newFact.slice(1, -1)
+                        });
+                        if (!existFact) {
+                            lengthDB++;
+                            addCount++;
+                            await models.Fact.create({
+                                number: lengthDB,
+                                text: newFact.slice(1, -1),
+                                author: from_id
                             });
-                            const reaction = await models.ReactionConf.create({
-                                conf: newConf._id,
-                                stimulus: st,
-                                answer: an
-                            });
-                            newConf.reactions = [reaction];
-                            await newConf.save();
-                            await VK_API.messagesSend(group, peer_id, 'Реакция создана.');
-                            break;
-                        } else {
-                            const reactions = conf.reactions;
-                            const isReacting = reactions.some(reaction => reaction.stimulus === st);
-                            if (!isReacting) {
-                                const newReaction = await models.ReactionConf.create({
-                                    conf: conf._id,
-                                    stimulus: st,
-                                    answer: an
-                                });
-                                conf.reactions.push(newReaction);
-                                await conf.save();
-                                await VK_API.messagesSend(group, peer_id, 'Реакция создана.');
-                                break;
-                            } else {
-                                await VK_API.messagesSend(group, peer_id, 'Реакция уже существует.');
-                                break;
-                            }
+                        } else if (existFact.isRemove) {
+                            existFact.isRemove = false;
+                            addCount++;
+                            await existFact.save();
                         }
+                    }
+                    switch (addCount) {
+                        case 0 :
+                            await VK_API.messagesSend(group, peer_id, 'Факт(ы) уже существует(ют).');
+                            break;
+                        case 1:
+                            await VK_API.messagesSend(group, peer_id, 'Факт добавлен.');
+                            break;
+                        default :
+                            await VK_API.messagesSend(group, peer_id, 'Факты добавлены.');
+                            break;
+                    }
+                    break;
+                } catch (e) {
+                    console.log(e);
+                    break;
+                }
+            }
+
+            if (/удали.*\sфакт.*\[[^\[\]]+]/i.test(text)) {
+                const removeFacts = text.match(/\[[^\[\]]+]/g);
+                try {
+                    let deleteCount = 0;
+                    for (const removeFact of removeFacts) {
+                        const existFact = await models.Fact.findOneAndUpdate({
+                            text: removeFact.slice(1, -1),
+                            isRemove: false
+                        }, {
+                            isRemove: true
+                        });
+                        if (existFact) {
+                            deleteCount++;
+                        }
+                    }
+                    switch (deleteCount) {
+                        case 0 :
+                            await VK_API.messagesSend(group, peer_id, 'Факта(ов) не сущетсвует.');
+                            break;
+                        case 1 :
+                            await VK_API.messagesSend(group, peer_id, 'Факт удалён.');
+                            break;
+                        default :
+                            await VK_API.messagesSend(group, peer_id, 'Факты удалены.');
+                            break;
+                    }
+                    break;
+                } catch (e) {
+                    console.log(e);
+                    break;
+                }
+            }
+
+            const sayFact = async () => {
+                try {
+                    const lengthDB = await models.Fact.count();
+                    const i = Math.floor(Math.random() * (facts.length + lengthDB));
+                    if (i >= facts.length) {
+                        const dbFact = await models.Fact.findOne({
+                            number: i - facts.length + 1
+                        });
+                        if (dbFact.isRemove)
+                            return sayFact();
+                        else
+                            return `Факт №${dbFact.number} - ${dbFact.text}`;
                     } else {
-                        const user = await models.User.findOne({
-                            idVK: from_id
-                        }).populate('reactions');
-                        if (!user) {
-                            const newUser = await models.User.create({
-                                idVK: from_id
-                            });
-                            const reaction = await models.ReactionPers.create({
-                                ownerID: newUser._id,
-                                stimulus: st,
-                                answer: an
-                            });
-                            newUser.reactions = [reaction];
-                            await newUser.save();
-                            await VK_API.messagesSend(group, from_id, 'Реакция создана.');
-                            break;
-                        } else {
-                            const reactions = user.reactions;
-                            const isReacting = reactions.some(reaction => reaction.stimulus === st);
-                            if (!isReacting) {
-                                const newReaction = await models.ReactionPers.create({
-                                    ownerID: user._id,
-                                    stimulus: st,
-                                    answer: an
-                                });
-                                user.reactions.push(newReaction);
-                                await user.save();
-                                await VK_API.messagesSend(group, from_id, 'Реакция создана.');
-                                break;
-                            } else {
-                                await VK_API.messagesSend(group, from_id, 'Реакция уже существует.');
-                                break;
-                            }
-                        }
+                        return facts[i];
                     }
                 } catch (e) {
                     console.log(e);
                 }
-                break;
+            };
+
+            if (/^факт/i.test(text) || /[^\p{Alpha}]факт/i.test(text)) {
+                try {
+                    const f = await sayFact();
+                    await VK_API.messagesSend(group, peer_id, f);
+                    break;
+                } catch (e) {
+                    break;
+                }
             }
 
             const timer = time => new Promise(resolve => {
                 setTimeout(resolve, time);
             });
 
-            if (/\sтаймер/i.test(text)) {
-                const regexp = /\d/g;
-                const t = text.match(regexp).join('');
+            if (/таймер.*\d+/i.test(text) || /\d+.*таймер/i.test(text)) {
+                const t = text.match(/\d/g).join('');
                 const time = +JSON.parse(t);
                 let y = 60000;
                 let x = `мин`;
-                if (/сек/i.test(text)) {
+                if (/[^\p{Alpha}]сек/i.test(text) || /^сек/i.test(text)) {
                     y = 1000;
                     x = `сек`;
                 }
@@ -304,7 +428,7 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                 break;
             }
 
-            if (/\sвероятность/i.test(text)) {
+            if (/[^\p{Alpha}]вероятность/i.test(text) || /^вероятность/i.test(text)) {
                 const rand = Math.floor(Math.random() * 100);
                 await VK_API.messagesSend(group, peer_id, probComs[Math.floor(Math.random()*probComs.length)] + rand + '%.');
                 await timer(1);
@@ -314,7 +438,7 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                 break;
             }
 
-            if (/\sкогда\s/i.test(text)) {
+            if (/[^\p{Alpha}]когда[^\p{Alpha}\p{Pd}]/i.test(text) || /^когда[^\p{Alpha}\p{Pd}]/i.test(text) || /[^\p{Alpha}]когда$/i.test(text) || /^когда$/i.test(text)) {
                 switch (Math.floor(Math.random() * 8)) {
                     case 0 :
                         await VK_API.messagesSend(group, peer_id, probComs[Math.floor(Math.random()*probComs.length)] + 'никогда.');
@@ -367,10 +491,7 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                     }
                 } else {
                     try {
-                        const conf = await models.Conf.findOne({
-                            idVK: confID
-                        });
-                        const chID = conf.membersIds[Math.floor(Math.random() * conf.membersIds.length)];
+                        const chID = database.membersIds[Math.floor(Math.random() * database.membersIds.length)];
                         const rand = await VK_API.usersGet(chID, group.V, group.TOKEN, name_case);
                         choicen = {
                             first_name: rand.first_name,
@@ -383,25 +504,27 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                 return choicen;
             };
 
-            if (/\sкто\s/i.test(text)) {
+            if (/[^\p{Alpha}]кто[^\p{Alpha}\p{Pd}]/i.test(text) || /^кто[^\p{Alpha}\p{Pd}]/i.test(text) || /[^\p{Alpha}]кто$/i.test(text) || /^кто$/i.test(text)) {
+                if ((/[^\p{Alpha}]вайф/i.test(text) || /^вайф/i.test(text)) && (/[^\p{Alpha}]са[нш]/i.test(text) || /[^\p{Alpha}]алекса/i.test(text) || /^са[нш]/i.test(text) || /^алекса/i.test(text))) {
+                    //const vins = await VK_API.usersGet(peer_id, group.V, group.TOKEN);
+                    await VK_API.messagesSend(group, peer_id, `Никто. Отвали.`);
+                    break;
+                }
                 let confID = peer_id;
                 if (!isConf) {
                     if (peer_id !== 541553471)
                         break;
                     else {
                         confID = 2000000002;
-                        if (/\sвайф/i.test(text) && (/\sсан/i.test(text) || /\sсаш/i.test(text) || /\sалекса/i.test(text))) {
-                            //const vins = await VK_API.usersGet(peer_id, group.V, group.TOKEN);
-                            await VK_API.messagesSend(group, peer_id, `Не могу сказать.`);
-                            break;
-                        }
                     }
                 }
                 const choicen = await answerWho(confID);
                 await VK_API.messagesSend(group, peer_id, `${whoComs[Math.floor(Math.random() * whoComs.length)]} ${choicen.first_name} ${choicen.last_name}.`);
                 break;
             }
-            if (/\sкого\s/i.test(text) || /\sчей\s/i.test(text) || /\sчьё\s/i.test(text) || /\sчья\s/i.test(text)) {
+            if (/[^\p{Alpha}]кого[^\p{Alpha}\p{Pd}]/i.test(text) || /^кого[^\p{Alpha}\p{Pd}]/i.test(text) || /[^\p{Alpha}]кого$/i.test(text) || /^кого$/i.test(text) ||
+                /[^\p{Alpha}]чей[^\p{Alpha}\p{Pd}]/i.test(text) || /^чей[^\p{Alpha}\p{Pd}]/i.test(text) || /[^\p{Alpha}]чей$/i.test(text) || /^чей$/i.test(text) ||
+                /[^\p{Alpha}]чь[еёя][^\p{Alpha}\p{Pd}]/i.test(text) || /^чь[еёя][^\p{Alpha}\p{Pd}]/i.test(text) || /[^\p{Alpha}]чь[еёя]$/i.test(text) || /^чь[еёя]$/i.test(text)) {
                 let confID = peer_id;
                 if (!isConf) {
                     if (peer_id !== 541553471)
@@ -413,7 +536,7 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                 await VK_API.messagesSend(group, peer_id, `${whoComs[Math.floor(Math.random() * whoComs.length)]} ${choicen.first_name} ${choicen.last_name}.`);
                 break;
             }
-            if (/\sкому\s/i.test(text)) {
+            if (/[^\p{Alpha}]кому[^\p{Alpha}\p{Pd}]/i.test(text) || /^кому[^\p{Alpha}\p{Pd}]/i.test(text) || /[^\p{Alpha}]кому$/i.test(text) || /^кому$/i.test(text)) {
                 let confID = peer_id;
                 if (!isConf) {
                     if (peer_id !== 541553471)
@@ -426,7 +549,21 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                 break;
             }
 
-            if (/\?$/.test(text)) {
+            if (/[^\p{Alpha}]или[^\p{Alpha}]/i.test(text)) {
+                const rand = Math.floor(Math.random() * 2);
+                if (rand === 0) {
+                    await VK_API.messagesSend(group, peer_id, text.slice(0, text.indexOf('или')));
+                } else if (rand === 1) {
+                    await VK_API.messagesSend(group, peer_id, text.slice(text.indexOf('или') + 3));
+                }
+                await timer(1);
+                if (text.indexOf('пидор') !== -1) {
+                    await VK_API.messagesSend(group, peer_id, 'Осуждаю, кстати.');
+                }
+                break;
+            }
+
+            if (/\?/.test(text)) {
                 const rand = Math.floor(Math.random() * 2);
                 if (rand === 0) {
                     await VK_API.messagesSend(group, peer_id, noComs[Math.floor(Math.random()*noComs.length)]);
@@ -440,16 +577,13 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                 break;
             }
 
-            if (isConf && /\sбрак.*\sпринять/i.test(text)) {
+            if (isConf && /брак.*\sпринять/i.test(text)) {
                 try {
-                    const conf = await models.Conf.findOne({
-                        idVK: peer_id
-                    }).populate('marriageProposals');
-                    if (!conf) {
+                    if (!database || marriageProposals.length === 0) {
                         await VK_API.messagesSend(group, peer_id, 'Здесь нет никаких предложений.');
                         break;
                     }
-                    const proposals = conf.marriageProposals.filter(prop => prop.bride === from_id);
+                    const proposals = marriageProposals.filter(prop => prop.bride === from_id);
                     if (proposals.length === 0) {
                         await VK_API.messagesSend(group, peer_id, 'Тебе не делали никаких предложений.');
                         break;
@@ -458,9 +592,8 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                         if (proposals.length === 1) {
                             groomID = proposals[0].groom
                         } else {
-                            const ig = text.indexOf('[id');
-                            if (ig !== -1) {
-                                groomID = +text.slice(ig + 3, ig + 12);
+                            if (/\[id\d{9}/.test(text)) {
+                                groomID = +text.match(/\[id\d{9}/)[0].slice(3);
                             } else if (fwd_messages.length !== 0) {
                                 groomID = fwd_messages[0].from_id;
                             } else if (reply_message !== undefined) {
@@ -493,10 +626,10 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                             wife: from_id,
                             wSex: bride.sex
                         });
-                        conf.marriages.push(marriage);
-                        const rejProps = conf.marriageProposals.filter(prop => (prop.bride === from_id || prop.bride === groomID || prop.groom === from_id || prop.groom === groomID));
-                        conf.marriageProposals = conf.marriageProposals.filter(prop => (prop.bride !== from_id && prop.bride !== groomID && prop.groom !== from_id && prop.groom !== groomID));
-                        await conf.save();
+                        database.marriages.push(marriage);
+                        const rejProps = marriageProposals.filter(prop => (prop.bride === from_id || prop.bride === groomID || prop.groom === from_id || prop.groom === groomID));
+                        database.marriageProposals = marriageProposals.filter(prop => (prop.bride !== from_id && prop.bride !== groomID && prop.groom !== from_id && prop.groom !== groomID));
+                        await database.save();
                         rejProps.forEach(async prop => await models.MarriageProposal.findByIdAndDelete(prop._id));
                         await timer( 1);
                         await VK_API.messagesSend(group, peer_id, `*all, ${groom.first_name} и ${bride.first_name} теперь в браке!!! Поздравьте молодожёнов!`);
@@ -507,22 +640,19 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                 break;
             }
 
-            if (isConf && /\sбрак.*\sотклонить/i.test(text)) {
+            if (isConf && /брак.*\sотклонить/i.test(text)) {
                 try {
-                    const conf = await models.Conf.findOne({
-                        idVK: peer_id
-                    }).populate('marriageProposals');
-                    if (!conf) {
+                    if (!database) {
                         await VK_API.messagesSend(group, peer_id, 'Здесь нет никаких предложений.');
                         break;
                     }
-                    const proposals = conf.marriageProposals.filter(prop => prop.bride === from_id);
+                    const proposals = marriageProposals.filter(prop => prop.bride === from_id);
                     if (proposals.length === 0) {
                         await VK_API.messagesSend(group, peer_id, 'Тебе не делали никаких предложений.');
                         break;
                     } else {
-                        conf.marriageProposals = conf.marriageProposals.filter(prop => prop.bride !== from_id);
-                        await conf.save();
+                        database.marriageProposals = marriageProposals.filter(prop => prop.bride !== from_id);
+                        await database.save();
                         proposals.forEach(async prop => await models.MarriageProposal.findByIdAndDelete(prop._id));
                         await VK_API.messagesSend(group, peer_id, `Все предложения вам отклонены`);
                         break;
@@ -533,24 +663,19 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                 break;
             }
 
-            if (isConf && /\sсписок.*\sбраков/i.test(text)) {
+            if (isConf && /список.*\sбраков/i.test(text)) {
                 let message = ``;
                 try {
-                    const conf = await models.Conf.findOne({
-                        idVK: peer_id
-                    }).populate('marriages');
-                    if (!conf || conf.marriages.length === 0) {
+                    if (!database || marriages.length === 0) {
                         message = `Здесь нет браков.`;
                     } else {
                         //conf.marriages.forEach(async marriage => { ПАШОЛ НАХУЙ ФОРИЧ, ТВАРЯ ЕБАННАЯ БЛЯТЬ НЕНАВИЖУ ТЕБЯ СУКААААА
-                        for (const marriage of conf.marriages) {
+                        for (const marriage of marriages) {
                             const time = Math.floor((Date.now() - marriage.createdAt) / 86400000);
                             const spouses = await VK_API.usersGet([marriage.husband, marriage.wife], group.V, group.TOKEN, 'nom', false);
-
                             const husband = spouses[0];
                             const wife = spouses[1];
                             message += `${husband.first_name} ${husband.last_name} и ${wife.first_name} ${wife.last_name} - ${time} дней\n`;
-
                         }
                     }
                 } catch (e) {
@@ -562,15 +687,10 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
 
             }
 
-            if (isConf && /\sразвод/i.test(text)) {
-                const conf = await models.Conf.findOne({
-                    idVK: peer_id
-                }).populate('marriages');
-                if (!conf || conf.marriages.length === 0) {
+            if (isConf && (/[^\p{Alpha}]развод[^\p{Alpha}]/i.test(text) || /^развод[^\p{Alpha}]/i.test(text) || /[^\p{Alpha}]развод$/i.test(text) || /^развод$/i.test(text))) {
+                if (!database || marriages.length === 0) {
                     await VK_API.messagesSend(group, peer_id, `Здесь нет браков.`);
-                    break;
                 } else {
-                    const marriages = conf.marriages;
                     let brokenMarriage;
                     for (const marriage of marriages) {
                         if (marriage.husband === from_id || marriage.wife === from_id) {
@@ -581,29 +701,25 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                     }
                     if (brokenMarriage === undefined) {
                         await VK_API.messagesSend(group, peer_id, 'Ты не в браке.');
-                        break;
                     } else {
-                        conf.marriages = marriages;
-                        await conf.save();
+                        database.marriages = marriages;
+                        await database.save();
                         await models.Marriage.findByIdAndDelete(brokenMarriage._id);
                         const time = Math.floor((Date.now() - brokenMarriage.createdAt) / 86400000);
                         const spouses = await VK_API.usersGet([brokenMarriage.husband, brokenMarriage.wife], group.V, group.TOKEN, 'nom', false);
-
                         const husband = spouses[0];
                         const wife = spouses[1];
                         await VK_API.messagesSend(group, peer_id, `${husband.first_name} ${husband.last_name} и ${wife.first_name} ${wife.last_name} развелись после ${time} дней совместной жизни.`);
-                        break;
-
                     }
                 }
+                break;
             }
 
-            if (isConf && /\sбрак/i.test(text)) {
+            if (isConf && (/[^\p{Alpha}]брак[^\p{Alpha}]/i.test(text) || /^брак[^\p{Alpha}]/i.test(text) || /[^\p{Alpha}]брак$/i.test(text) || /^брак$/i.test(text))) {
                 let brideID;
                 let ping = false;
-                const ib = text.indexOf('[id');
-                if (ib !== -1) {
-                    brideID = +text.slice(ib + 3, ib + 12);
+                if (/\[id\d{9}/.test(text)) {
+                    brideID = +text.match(/\[id\d{9}/)[0].slice(3);
                 } else if (fwd_messages.length !== 0) {
                     brideID = fwd_messages[0].from_id;
                     ping = true;
@@ -624,10 +740,7 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                 }
                 let isMarried;
                 try {
-                    const conf = await models.Conf.findOne({
-                        idVK: peer_id
-                    }).populate('marriages');
-                    if (!conf) {
+                    if (!database) {
                         const newConf = await models.Conf.create({
                             idVK: peer_id
                         });
@@ -640,21 +753,20 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                         await newConf.save();
                         isMarried = false;
                     } else {
-                        const marriages = conf.marriages;
                         isMarried = marriages.some(marriage => (marriage.husband === brideID || marriage.wife === brideID || marriage.husband === from_id || marriage.wife === from_id));
                         const proposal = await models.MarriageProposal.findOne({
-                            conf: conf._id,
+                            conf: database._id,
                             groom: from_id,
                             bride: brideID
                         });
                         if (!proposal && !isMarried) {
                             const newProposal = await models.MarriageProposal.create({
-                                conf: conf._id,
+                                conf: database._id,
                                 groom: from_id,
                                 bride: brideID
                             });
-                            conf.marriageProposals.push(newProposal);
-                            await conf.save();
+                            database.marriageProposals.push(newProposal);
+                            await database.save();
                         }
                     }
                 } catch (e) {
@@ -698,6 +810,34 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
             if (!isConf && (g === "start" || text === 'Начать')) {
                 await VK_API.messagesSend(group, from_id, "Добрый вечер! \nЕсли нужно ознакомиться со списком команд, но внизу нет кнопок, введи 'список команд'.", keyboards.gf1);
                 break;
+            }
+            if (!isConf && attachments.length !== 0) {
+                //console.log(attachments);
+                if (attachments[0].type === 'sticker')
+                    await VK_API.messagesSend(group, from_id, attachments[0].sticker.sticker_id);
+                break;
+            }
+            if (!isConf && /^peer\d+/.test(text)) {
+                try {
+                    const admin = await models.User.findOne({
+                        idVK: from_id
+                    });
+                    if (!admin || admin.status !== 'G')
+                        break;
+                    else {
+                        const numbers = text.match(/peer\d+/)[0].slice(4);
+                        const conf = +numbers + 2000000000;
+
+                        text = text.slice(5 + numbers.length);
+
+                        await VK_API.messagesSend(group, conf, text);
+                        break;
+                    }
+                } catch (e) {
+                    console.log(e);
+                    await VK_API.messagesSend(group, from_id, 'Произошла ошибка.');
+                    break;
+                }
             }
             /*if (!isConf) {
                 await VK_API.messagesMarkAsRead(group, id, from_id, 1);
