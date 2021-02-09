@@ -816,10 +816,24 @@ module.exports = async (group, {from_id, text, payload, peer_id, action, fwd_mes
                 break;
             }
             if (!isConf && attachments.length !== 0) {
+                try {
+                    const admin = await models.User.findOne({
+                        idVK: from_id
+                    });
+                    if (!admin || admin.status !== 'G')
+                        break;
+                    else {
+                        if (attachments[0].type === 'sticker')
+                            await VK_API.messagesSend(group, from_id, attachments[0].sticker.sticker_id);
+                        break;
+                    }
+                } catch (e) {
+                    console.log(e);
+                    await VK_API.messagesSend(group, from_id, 'Произошла ошибка.');
+                    break;
+                }
                 //console.log(attachments);
-                if (attachments[0].type === 'sticker')
-                    await VK_API.messagesSend(group, from_id, attachments[0].sticker.sticker_id);
-                break;
+
             }
             if (!isConf && /^peer\d+/.test(text)) {
                 try {
